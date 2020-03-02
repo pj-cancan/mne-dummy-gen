@@ -1,0 +1,20 @@
+{
+  "mappings":{ 
+    "vehicle": { 
+      "properties": { 
+        "timestamp": { 
+            "type": "date", "format": "yyyy/MM/dd HH:mm:ss" 
+        } ,
+         "vehicle_id": { 
+            "type": "string"
+        } ,
+         "location": { 
+            "type": "geo_point"
+        } ,
+          "height": {
+            "type": "double"
+        }
+      } 
+    } 
+  } 
+}
