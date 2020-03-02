@@ -4,6 +4,10 @@
 * How to use
 * 変数系定義
 
+## 概要
+ダミーデータ生成ツール  
+Google map Direction APIを使用して車両情報を時系列で生成する
+
 ## 変更点(2018/05/17)
 
 * python3に対応
@@ -18,6 +22,11 @@
   * ただし、"drv_time"と"timestamp"は更新されます
   * duration 60でinterval 10でfilldown True なら 60レコードが生成され、
   * 10レコード毎に同じデータが設定されます
+
+
+## google maps APIの取得
+* Google Cloud Platform の Google Maps API から Direction API を有効にしてAPI Keyを作成しておく
+
 
 ## How to use
 
@@ -55,77 +64,121 @@ usage: dummy-gen.py [-h] [-d DURATION] [-o OUT] [-l LOCATIONS [LOCATIONS ...]]
                     [-n NONRANDOM] [-k APIKEY] [-i INTERVAL]
 
 optional arguments:
-  -h, --help            show this help message and exit
+  -h, --help            show this help message and exit  
+
   -d DURATION, --duration DURATION
                         sample duration(default = 10)
+
   -o OUT, --out OUT     output filename(default = sample.json)
+                        .yaml or .json can be specified  
+
   -l LOCATIONS [LOCATIONS ...], --locations LOCATIONS [LOCATIONS ...]
                         locations (default = "大崎" "お台場" "品川" "羽田空港")
+
   -r ROUTES, --routes ROUTES
                         route size(default = 2)
+
   -w WAYPOINTS, --waypoints WAYPOINTS
                         waypoints(default = 5)
+
   -s SPEED, --speed SPEED
                         speed(default = 36(km/h))
+
   -m RANDOM, --random RANDOM
                         speed random facor(default = 0persent)
+
   -t TITLE, --title TITLE
                         vehicleID = title + sequential num(default = A)
+
   -p TIMESTAMP, --timestamp TIMESTAMP
                         start time(default = 2017/08/02 00:00:00)
+
   -e ENDLESS, --endless ENDLESS
                         loop among waypoints(default = False)
+
   -c COORDINATE, --coordinate COORDINATE
                         use coordinate file to make result
+
   -n NONRANDOM, --nonrandom NONRANDOM
                         if True, make route with all locations(default =
                         False)
+
   -k APIKEY, --apikey APIKEY
-                        google apiのキーを指定して下さい
+                        Directioni APIのキーを指定
+
   -i INTERVAL, --interval INTERVAL
                         データ生成インターバル(秒)を指定します(default = 1)
+
   -f FILLDOWN, --filldown FILLDOWN
                         データ生成インターバル時のデータの振りおろしを行います
 ```
 
- * データ生成例1
+## Example
+
+### データ生成例1
  
-- 刈谷市周辺を走行する、3時間(10800秒)のデータを400件生成。
+- 刈谷市周辺を走行する，3時間(10800秒)のデータを400件生成。
 - 平均速度は36km/h, 速度のランダムさは20%, 車両IDは"DEMO000000", 時間は2017/08/16 09:00:00から。
-- 経路は都市の数から3点を取ってその点を回り続けるというもの。
+- `location`からランダムに3点を選択し，それらの都市間を回り続ける．
 
 ```
-python dummy-gen.py -d 10800 -o sample_nagoya.json --apikey xxxxxxx -l "刈谷市" "デンソー　本社" "東海市"  "大府市" "高浜市" "安城市" "豊明市" "岡崎市" "西尾市" "豊田市" -r 400 -w 2 -s 36 -m 20 -t DEMO -e True -p "2017/08/16 09:00:00"
+python dummy-gen.py \
+--duration 10800 \
+--apikey xxxxxxx \
+--location "刈谷市" "デンソー　本社" "東海市"  "大府市" "高浜市" "安城市" "豊明市" "岡崎市" "西尾市" "豊田市" \
+--routes 400 \
+--waypoints 2 \
+--speed 36 \
+--random 20 \
+--title DEMO \
+--endless True \
+--timestanp "2017/08/16 09:00:00"
 ```
 
- * データ生成例2
+### データ生成例2
 - 1のデータを、coordinatesファイルから作成
 
 ```
-python dummy-gen.py -d 10800 -o sample_nagoya.json --apikey xxxxxxx  -l "刈谷市" "デンソー　本社" "東海市"  "大府市" "高浜市" "安城市" "豊明市" "岡崎市" "西尾市" "豊田市" -r 400 -w 2 -s 36 -m 20 -t DEMO -e True -c coordinates.json -p "2017/08/16 09:00:00“
+python dummy-gen.py \
+--duration 10800 \
+--apikey xxxxxxx \
+--location "刈谷市" "デンソー　本社" "東海市"  "大府市" "高浜市" "安城市" "豊明市" "岡崎市" "西尾市" "豊田市" \
+--routes 400 \
+--waypoints 2 \
+--speed 36 \
+--random 20 \
+--title DEMO \
+--endless True \
+--timestanp "2017/08/16 09:00:00" \
+--coordinate coordinates.json \
+--timestanp "2017/08/16 09:00:00“
 ```
 
- * データ生成例3
+### データ生成例3
 
-60秒間のデータを10秒毎にデータ出力するので、件数は６件
-
-```
-python  dummy-gen.py --duration 60 --apikey xxxxxxx --out /mnt/ramdisk/sample.json --interval 10
-```
-
- * データ生成例4
-
-60秒間のデータを10秒毎にデータ更新し、その間のデータは前のデータを引き継ぐ。件数は６０件
+60秒間のデータを10秒毎にデータ出力する． 出力件数は6件となる
 
 ```
-python  dummy-gen.py --duration 60 --apikey xxxxxxx --out /mnt/ramdisk/sample.json --interval 10 --filldown True
+python dummy-gen.py \
+--duration 60 \
+--apikey xxxxxxx \
+--interval 10
 ```
 
-### yamlで出力
+### データ生成例4
 
-* --out オプションを(yaml|yml)にすることで、yaml形式で出力します
+60秒間のデータのうち，10秒毎にデータ更新．その間のデータは前のデータを引き継ぐ．  
+出力件数は60件となる
 
-## sample output
+```
+python  dummy-gen.py \
+--duration 60 \
+--apikey xxxxxxx \
+--interval 10 \
+--filldown True
+```
+
+### sample output
 
 ```
 [
