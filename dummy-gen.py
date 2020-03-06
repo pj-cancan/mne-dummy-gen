@@ -52,17 +52,17 @@ parser.add_argument("-l", '--locations', default=["大崎", "お台場", "品川
                     help="locations (default = \"大崎\" \"お台場\" \"品川\" \"羽田空港\")", nargs='+')
 parser.add_argument("-r", "--routes", default=2, help="route size(default = 2)", type=int)
 parser.add_argument("-w", "--waypoints", default=5, help="waypoints(default = 5)", type=int)
-parser.add_argument("-s", "--speed", default=36, help="speed(default = 36(km/h))", type=int)
+parser.add_argument("-s", "--speed", default=36, help="speed(default = 36(km/h))", type=float)
 parser.add_argument("-m", "--random", default=0, help="speed random facor(default = 0persent)", type=int)
 parser.add_argument("-t", "--title", default="A", help="vehicleID = title + sequential num(default = A)", type=str)
-parser.add_argument("-p", "--timestamp", default="2017/08/02 00:00:00",
-                    help="start time(default = 2017/08/02 00:00:00)")
+parser.add_argument("-p", "--timestamp", default="2017/08/02 00:00:00.000",
+                    help="start time(default = 2017/08/02 00:00:00.000)")
 parser.add_argument("-e", "--endless", default=False, help="loop among waypoints(default = False)", type=bool)
 parser.add_argument("-c", "--coordinate", help="use coordinate file to make result", type=str)
 parser.add_argument("-n", "--nonrandom", default=False, help="if True, make route with all locations(default = False)",
                     type=bool)
 parser.add_argument("-k", "--apikey", default=False, help="google apiのキーを指定して下さい", type=str)
-parser.add_argument("-i", "--interval", default=1, help="データ生成インターバル(秒)を指定します(default = 1)", type=int)
+parser.add_argument("-i", "--interval", default=1, help="データ生成インターバル(秒)を指定します(default = 1)", type=float)
 parser.add_argument("-f", "--filldown", default=False, help="データ生成インターバル時のデータの振りおろしを行います", type=bool)
 parser.add_argument("--idoffset", "--idoffset", default=0, help="ID生成のオフセット(default = 0)", type=int)
 parser.add_argument("--idnames", "--idnames", default = ["mobility_id"] , help="IDのキー名", nargs='+')
@@ -117,7 +117,7 @@ def gen_rand(car, start_time, sample_duration):
     rand_data = []
     for i in range(0, sample_duration):
         record = OrderedDict()
-        start_time = start_time + datetime.timedelta(0, 1)
+        start_time = start_time + datetime.timedelta(0, 0.1)
         #record['mobility_id'] = v_id
         for idname in args.idnames:
             record[idname] = v_id
@@ -162,7 +162,7 @@ def gen_rand(car, start_time, sample_duration):
         record['lng'] = lng
         record['alt'] = height
         record['drv_time'] = drv_time
-        record['timestamp'] = start_time.strftime('%Y/%m/%d %H:%M:%S')
+        record['timestamp'] = start_time.strftime('%Y/%m/%d %H:%M:%S.%f')
         record['spd'] = int(speed)
         # record['acc_lv'] = acceleration_level
         # record['brk_lv'] = brake_level
@@ -242,7 +242,7 @@ def create_sample_path(car_id, speed, start, end):
             origin=start,
             destination=end,
             language="ja",
-            mode="walking",
+            mode="driving",
             avoid=["trolls", "highways", "indoor"])
         legs = response[0]["legs"][0]
     except Exception as e:
@@ -330,7 +330,8 @@ def execute():
             json.dump(cars, file, indent=4)
 
     # input jsonの読込み
-    start_time = datetime.datetime.strptime(args.timestamp, "%Y/%m/%d %H:%M:%S")
+    start_time = datetime.datetime.strptime(
+        args.timestamp, "%Y/%m/%d %H:%M:%S.%f")
     with open(input_json, "r") as file:
         cars = json.load(file)
 
