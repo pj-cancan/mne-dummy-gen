@@ -13,12 +13,12 @@ import (
 type Input struct {
 	MobilityID string  `json:"mobility_id"`
 	SeqNo      int     `json:"seq_no"`
-	Lat        float64 `json:"lat"`
-	Lng        float64 `json:"lng"`
+	Latitude        float64 `json:"latitude"`
+	Longitude        float64 `json:"longitude"`
 	Alt        int     `json:"alt"`
 	DrvTime    int     `json:"drv_time"`
-	Timestamp  string  `json:"timestamp"`
-	Spd        float64 `json:"spd"`
+	Date  string  `json:"date"`
+	Speed        float64 `json:"speed"`
 }
 
 type Output struct {
@@ -85,10 +85,10 @@ func main() {
 	for _, data := range inputData {
 		var out Output
 		out.DeviceID = data.MobilityID
-		out.Date = timeStampParse(data.Timestamp)
-		out.Latitude = data.Lat
-		out.Longitude = data.Lng
-		out.Speed = data.Spd
+		out.Date = timeStampParse(data.Date)
+		out.Latitude = data.Latitude
+		out.Longitude = data.Longitude
+		out.Speed = data.Speed
 		out.Direction = 123.45 //適当な値
 		out.AccelerationX = randAcceleration()
 		out.AccelerationY = randAcceleration()

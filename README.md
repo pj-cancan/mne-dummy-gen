@@ -18,7 +18,7 @@ Google map Direction APIを使用して車両情報を時系列で生成する
   * duration 60でinterval 10なら 6レコードが生成されます
 * 任意オプション --filldownを追加
   * --intervalが１より大きい時が対象となります
-  * この値がTrueの時は、生成されたデータは、次のデータ生成タイミングまで保持されます。
+  * この値がTrueの時は、生成されたデータは、次のデータ生成タイミングまで保持されます
   * ただし、"drv_time"と"timestamp"は更新されます
   * duration 60でinterval 10でfilldown True なら 60レコードが生成され、
   * 10レコード毎に同じデータが設定されます
@@ -67,7 +67,7 @@ optional arguments:
   -h, --help            show this help message and exit  
 
   -d DURATION, --duration DURATION
-                        sample duration(default = 10)
+                        Driving time(default = 600 sec)
 
   -o OUT, --out OUT     output filename(default = sample.json)
                         .yaml or .json can be specified  
@@ -85,13 +85,13 @@ optional arguments:
                         speed(default = 36(km/h))
 
   -m RANDOM, --random RANDOM
-                        speed random facor(default = 0persent)
+                        Speed ​​change random rate(default = 0persent)
 
   -t TITLE, --title TITLE
                         vehicleID = title + sequential num(default = A)
 
   -p TIMESTAMP, --timestamp TIMESTAMP
-                        start time(default = 2017/08/02 00:00:00)
+                        start time(default = 2020/01/01 00:00:00.000000)
 
   -e ENDLESS, --endless ENDLESS
                         loop among waypoints(default = False)
@@ -100,25 +100,33 @@ optional arguments:
                         use coordinate file to make result
 
   -n NONRANDOM, --nonrandom NONRANDOM
-                        if True, make route with all locations(default =
-                        False)
+                        if True, make route with all locations(default = False)
 
   -k APIKEY, --apikey APIKEY
                         Directioni APIのキーを指定
 
   -i INTERVAL, --interval INTERVAL
-                        データ生成インターバル(秒)を指定します(default = 1)
+                        データ生成インターバルを指定します(default = 1)
 
   -f FILLDOWN, --filldown FILLDOWN
                         データ生成インターバル時のデータの振りおろしを行います
+
+  --idoffset, IDOFFSET  
+                        車両IDの番号を指定します(default = 0)
+
+  --idnames, IDNAMES
+                        車両ID名を指定します(default = ["device_id"]) 複数のID名を付けられます
+
+  --unitime, UNITIME
+                        何秒ごとにファイルへ記録をするか指定します(default = 1.0 sec)
 ```
 
 ## Example
 
 ### データ生成例1
  
-- 刈谷市周辺を走行する，3時間(10800秒)のデータを400件生成。
-- 平均速度は36km/h, 速度のランダムさは20%, 車両IDは"DEMO000000", 時間は2017/08/16 09:00:00から。
+- 刈谷市周辺を走行する，3時間(10800秒)のデータを400件生成
+- 平均速度は36km/h, 速度のランダムさは20%, 車両IDは"DEMO000000", 時間は2017/08/16 09:00:00から
 - `location`からランダムに3点を選択し，それらの都市間を回り続ける．
 
 ```
@@ -178,38 +186,39 @@ python  dummy-gen.py \
 --filldown True
 ```
 
+### データ生成例5
+ 
+- 東京駅周辺を走行する，10分間(600秒)のデータを生成
+- 時間は2020/01/01 00:00:00.000から0.1秒刻みでデータ生成
+- device_idは`DEMO01234`
+
+```
+python dummy-gen.py \
+--duration 6000 \
+--apikey xxxxxxx \
+--location "東京駅" "汐留" "有楽町" "新橋" "銀座" "日比谷" \
+--routes 1 \
+--unitime 0.1 \
+--timestanp "2020/01/01 00:00:00" \
+--title DEMO \
+--idoffset 01234
+```
+
 ### sample output
 
 ```
 [
     {
-        "v_id": "0", 
-        "lat": 35.62636, 
-        "lng": 139.7792279, 
-        "drv_time": 2066, 
-        "height": 0,
-        "timestamp": "2017/08/02 00:12:37", 
-        "spd": 10, 
-        "acc_lv": 0, 
-        "brk_lv": 0, 
-        "steering": 0, 
-        "wl_spd_fr": 100, 
-        "wl_spd_fl": 100, 
-        "wl_spd_rr": 100, 
-        "wl_spd_rl": 100, 
-        "curv": 0, 
-        "diag": false, 
-        "gas": 100, 
-        "wl": 100, 
-        "wl_air_fl": 100, 
-        "wl_air_fr": 100, 
-        "wl_air_rr": 100, 
-        "wl_air_rl": 100, 
-        "battery": 100, 
-        "light": false, 
-        "wiper": 1, 
-        "passengers": 1, 
-        "shift_type": "4"
+       "device_id": "A000001",
+        "date": "2020-01-01T00:00:00.100000+09:00",
+        "latitude": 35.6746554,
+        "longitude": 139.7620339,
+        "speed": 35.52413667069178,
+        "direction": 167.1427506900309,
+        "emergency_cd": "0",
+        "acceleration_x": 0.2917561022954962,
+        "acceleration_y": 0.15690910549068304,
+        "acceleration_z": -0.07963680213923685
     },
 ]
 ```
