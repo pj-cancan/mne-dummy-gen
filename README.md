@@ -49,14 +49,6 @@ pip install -r requirements.txt
 
 ```
 
-* ルートを決める
-
-``` dummy-gen.py
-# [[出発地,目的地],]
-def execute():
-    locations = [["大崎","お台場"],["品川","羽田空港"]]
-```
-
 * プログラム実行
 
 ```
