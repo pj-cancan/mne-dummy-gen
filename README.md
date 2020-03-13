@@ -6,7 +6,13 @@
 
 ## 概要
 ダミーデータ生成ツール  
-Google map Direction APIを使用して車両情報を時系列で生成する
+[Google map Direction API](https://developers.google.com/maps/documentation/directions/start) を使用してダミーの車両情報を時系列で生成する
+
+## 変更点(2020/03/13)
+* 任意オプション --unitimeを追加
+  * タイムスタンプ刻みを指定できるようにしました．小数点以下まで指定できます． 
+* 車両名，IDを指定できるようにした
+* ソースにコメント追加
 
 ## 変更点(2018/05/17)
 
@@ -25,7 +31,8 @@ Google map Direction APIを使用して車両情報を時系列で生成する
 
 
 ## google maps APIの取得
-* Google Cloud Platform の Google Maps API から Direction API を有効にしてAPI Keyを作成しておく
+* Google Cloud Platform のプロジェクトを作成しておく
+* Google Cloud Platform の Google Maps API から Direction API を有効にしてAPI Keyを作成
 
 
 ## How to use
@@ -61,13 +68,15 @@ python dummy-gen.py -h
 usage: dummy-gen.py [-h] [-d DURATION] [-o OUT] [-l LOCATIONS [LOCATIONS ...]]
                     [-r ROUTES] [-w WAYPOINTS] [-s SPEED] [-m RANDOM]
                     [-t TITLE] [-p TIMESTAMP] [-e ENDLESS] [-c COORDINATE]
-                    [-n NONRANDOM] [-k APIKEY] [-i INTERVAL]
+                    [-n NONRANDOM] [-k APIKEY] [-i INTERVAL] [-f FILLDOWN]
+                    [--idoffset IDOFFSET] [--idnames IDNAMES [IDNAMES ...]]
+                    [--unitime UNITIME]
 
 optional arguments:
   -h, --help            show this help message and exit  
 
   -d DURATION, --duration DURATION
-                        Driving time(default = 600 sec)
+                        Driving time(sec) (default = 600 sec)
 
   -o OUT, --out OUT     output filename(default = sample.json)
                         .yaml or .json can be specified  
@@ -118,7 +127,7 @@ optional arguments:
                         車両ID名を指定します(default = ["device_id"]) 複数のID名を付けられます
 
   --unitime, UNITIME
-                        何秒ごとにファイルへ記録をするか指定します(default = 1.0 sec)
+                        タイムスタンプ間隔を指定します(default = 1.0 sec)
 ```
 
 ## Example
@@ -140,7 +149,7 @@ python dummy-gen.py \
 --random 20 \
 --title DEMO \
 --endless True \
---timestanp "2017/08/16 09:00:00"
+--timestamp "2017/08/16 09:00:00"
 ```
 
 ### データ生成例2
@@ -157,31 +166,32 @@ python dummy-gen.py \
 --random 20 \
 --title DEMO \
 --endless True \
---timestanp "2017/08/16 09:00:00" \
---coordinate coordinates.json \
---timestanp "2017/08/16 09:00:00“
+--timestamp "2017/08/16 09:00:00" \
+--coordinate coordinates.json
 ```
 
 ### データ生成例3
 
-60秒間のデータを10秒毎にデータ出力する． 出力件数は6件となる
-
+- 品川から大崎へ向かう60秒間のデータを10秒毎に出力する． 
+- 出力件数は6件となる
 ```
 python dummy-gen.py \
 --duration 60 \
 --apikey xxxxxxx \
+--location "品川" "大崎"
 --interval 10
 ```
 
 ### データ生成例4
 
-60秒間のデータのうち，10秒毎にデータ更新．その間のデータは前のデータを引き継ぐ．  
+品川から大崎へ向かう60秒間のデータのうち，10秒毎にデータ更新．その間のデータは前のデータを引き継ぐ．  
 出力件数は60件となる
 
 ```
 python  dummy-gen.py \
 --duration 60 \
 --apikey xxxxxxx \
+--location "品川" "大崎"
 --interval 10 \
 --filldown True
 ```
@@ -189,17 +199,19 @@ python  dummy-gen.py \
 ### データ生成例5
  
 - 東京駅周辺を走行する，10分間(600秒)のデータを生成
-- 時間は2020/01/01 00:00:00.000から0.1秒刻みでデータ生成
+- 時間は2020/01/01 00:00:00.000から0.1秒刻み
 - device_idは`DEMO01234`
 
 ```
 python dummy-gen.py \
---duration 6000 \
+--duration 600 \
 --apikey xxxxxxx \
 --location "東京駅" "汐留" "有楽町" "新橋" "銀座" "日比谷" \
 --routes 1 \
+--waypoints 4 \
+--endless True \
 --unitime 0.1 \
---timestanp "2020/01/01 00:00:00" \
+--timestamp "2020/01/01 00:00:00.000" \
 --title DEMO \
 --idoffset 01234
 ```
@@ -216,9 +228,6 @@ python dummy-gen.py \
         "speed": 35.52413667069178,
         "direction": 167.1427506900309,
         "emergency_cd": "0",
-        "acceleration_x": 0.2917561022954962,
-        "acceleration_y": 0.15690910549068304,
-        "acceleration_z": -0.07963680213923685
     },
 ]
 ```

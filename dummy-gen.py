@@ -50,8 +50,6 @@ gas_max = 40
 air_min = 2
 air_max = 2.4
 
-waypoints = 2
-
 parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--duration", default=10, help="sample duration(default = 10)", type=int)
 parser.add_argument("-o", "--out", default="sample.json", help="output filename(default = sample.json)", type=str)
@@ -73,11 +71,15 @@ parser.add_argument("-i", "--interval", default=1, help="データ生成イン�
 parser.add_argument("-f", "--filldown", default=False, help="データ生成インターバル時のデータの振りおろしを行います", type=bool)
 parser.add_argument("--idoffset", "--idoffset", default=0, help="ID生成のオフセット(default = 0)", type=int)
 parser.add_argument("--idnames", "--idnames", default = ["device_id"] , help="IDのキー名", nargs='+')
-parser.add_argument("--unitime", "--unitime", default=1, help="speed(default = 1(sec))", type=float)
+parser.add_argument("--unitime", "--unitime", default=1, help="秒ごとにファイルへ記録をするか指定します(default = 1(sec))", type=float)
 
 print(sys.argv)
 
 args = parser.parse_args()
+
+waypoints = args.waypoints
+unit_time = args.unitime
+
 
 if args.coordinate is not None:
     input_json = args.coordinate
@@ -85,11 +87,13 @@ if args.coordinate is not None:
 if args.apikey is not None:
     api_key = args.apikey
 
-waypoints = args.waypoints
 if waypoints < 2:
     waypoints = 2
 
-# ランダムに加速度生成
+if args.filldown and unit_time < 1.0:
+    args.filldown = False
+
+# -0.5 ~ 0.5のランダム加速度を生成
 # 確率 r で異常加速度生成
 def rand_acceleration(r):
     probability = random.uniform(0, 1)
@@ -111,7 +115,7 @@ def gen_rand(car, start_time, duration):
     v_id = car['v_id']
     drv_time = random.randint(0, 2400)
 
-    # ±args.random% 速度増減をさせる
+    # ±args.random % の速度増減をさせる
     speed = car['speed'] * (1.0 + random.randint(-args.random, args.random) / 100.0)
     max_speed = speed * (1.0 + args.random / 100.0)
     min_speed = speed * (1.0 - args.random / 100.0)
@@ -138,8 +142,8 @@ def gen_rand(car, start_time, duration):
     rand_data = []
     for i in range(0, duration):
         record = OrderedDict()
-        # timstampを刻む
-        start_time = start_time + datetime.timedelta(0, args.unitime)
+        # unitimeごとにタイムスタンプを刻む
+        start_time = start_time + datetime.timedelta(0, unit_time)
         
         for idname in args.idnames:
             record[idname] = v_id
@@ -171,8 +175,8 @@ def gen_rand(car, start_time, duration):
         # 現地点と次地点との距離
         distance = math.hypot(tgt_lng - lng, tgt_lat - lat)
 
-        # 1イテレーション(unitime)あたりに進む距離(m)
-        speed_per_iter = int(speed / 3.6 * args.unitime)
+        # 1イテレーション(unit time)あたりに進む距離(m)
+        speed_per_iter = int(speed / 3.6 * unit_time)
 
         # 1イテレーションあたりに進むlat,lng
         lat_delta = math.sin(azimuth / 180.0 * math.pi) * lat_per_1m * speed_per_iter
@@ -181,8 +185,6 @@ def gen_rand(car, start_time, duration):
         delta = math.hypot(lng_delta, lat_delta)
 
         # print(tgt_lat-lat,tgt_lng-lng)
-        #string_time = start_time.strftime('%Y/%m/%d %H:%M:%S.%f')
-        #date_time = dt.strptime(string_time, '%Y-%m-%d %H:%M:%S')
         record['date'] = start_time.strftime('%Y-%m-%dT%H:%M:%S.%f'+'+09:00')
         # record['seq_no'] = i
         record['latitude'] = lat
@@ -190,9 +192,9 @@ def gen_rand(car, start_time, duration):
         record['speed'] = speed
         record['direction'] = azimuth
         record['emergency_cd'] = "0"
-        record['acceleration_x'] = rand_acceleration(0.01)
-        record['acceleration_y'] = rand_acceleration(0.01)
-        record['acceleration_z'] = rand_acceleration(0.001)
+        # record['acceleration_x'] = rand_acceleration(0.01)
+        # record['acceleration_y'] = rand_acceleration(0.01)
+        # record['acceleration_z'] = rand_acceleration(0.01)
         # record['alt'] = height
         # record['drv_time'] = drv_time
         # record['acc_lv'] = acceleration_level
@@ -274,7 +276,7 @@ def create_sample_path(car_id, speed, start, end):
             origin=start,
             destination=end,
             language="ja",
-            mode="driving",
+            mode="walking",
             avoid=["trolls", "highways", "indoor"])
         legs = response[0]["legs"][0]
     except Exception as e:
@@ -372,7 +374,7 @@ def execute():
     with open(input_json, "r") as file:
         cars = json.load(file)
 
-    sample_json = create_sample(cars, start_time, args.duration)
+    sample_json = create_sample(cars, start_time, (int)(args.duration/unit_time))
 
     # ファイル出力
     if args.out.endswith(".json"):
