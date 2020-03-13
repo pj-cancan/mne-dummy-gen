@@ -10,8 +10,15 @@ import sys
 import copy
 
 # 定数 ###############################
+# 緯度 35度と仮定(経度１度の距離は経度によって決まるため、tokyo(北緯35度)とする)
+# 1mあたりの緯度は 0.0000090133729745762
+# 例えば現在地の緯度から 10m 南の緯度を求めるには、この値に 10 を掛けたものを現在地の緯度からマイナスすれば求まる．北ならプラスする
 lat_per_1m = 0.000009
-lng_per_1m = 0.000011  # 緯度 35度と仮定(経度１度の距離は経度によって決まるため、tokyo（３５度）とする)
+# 1mあたりの経度は 0.000010966404715491394 度
+# 例えば現在地の経度から 10m 西の経度を求めるには、この値に 10 を掛けたものを現在地の経度からマイナスすれば求まる．東ならプラスする
+lng_per_1m = 0.000011
+
+
 input_json = "coordinates.json"
 
 # 車両系定数 #########################
@@ -43,8 +50,6 @@ gas_max = 40
 air_min = 2
 air_max = 2.4
 
-waypoints = 2
-
 parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--duration", default=10, help="sample duration(default = 10)", type=int)
 parser.add_argument("-o", "--out", default="sample.json", help="output filename(default = sample.json)", type=str)
@@ -52,24 +57,29 @@ parser.add_argument("-l", '--locations', default=["大崎", "お台場", "品川
                     help="locations (default = \"大崎\" \"お台場\" \"品川\" \"羽田空港\")", nargs='+')
 parser.add_argument("-r", "--routes", default=2, help="route size(default = 2)", type=int)
 parser.add_argument("-w", "--waypoints", default=5, help="waypoints(default = 5)", type=int)
-parser.add_argument("-s", "--speed", default=36, help="speed(default = 36(km/h))", type=int)
+parser.add_argument("-s", "--speed", default=36, help="speed(default = 36(km/h))", type=float)
 parser.add_argument("-m", "--random", default=0, help="speed random facor(default = 0persent)", type=int)
 parser.add_argument("-t", "--title", default="A", help="vehicleID = title + sequential num(default = A)", type=str)
-parser.add_argument("-p", "--timestamp", default="2017/08/02 00:00:00",
-                    help="start time(default = 2017/08/02 00:00:00)")
+parser.add_argument("-p", "--timestamp", default="2020/01/01 00:00:00.000",
+                    help="start time(default = 2020/01/01 00:00:00.000)")
 parser.add_argument("-e", "--endless", default=False, help="loop among waypoints(default = False)", type=bool)
 parser.add_argument("-c", "--coordinate", help="use coordinate file to make result", type=str)
 parser.add_argument("-n", "--nonrandom", default=False, help="if True, make route with all locations(default = False)",
                     type=bool)
 parser.add_argument("-k", "--apikey", default=False, help="google apiのキーを指定して下さい", type=str)
-parser.add_argument("-i", "--interval", default=1, help="データ生成インターバル(秒)を指定します(default = 1)", type=int)
+parser.add_argument("-i", "--interval", default=1, help="データ生成インターバルを指定します(default = 1)", type=float)
 parser.add_argument("-f", "--filldown", default=False, help="データ生成インターバル時のデータの振りおろしを行います", type=bool)
 parser.add_argument("--idoffset", "--idoffset", default=0, help="ID生成のオフセット(default = 0)", type=int)
-parser.add_argument("--idnames", "--idnames", default = ["mobility_id"] , help="IDのキー名", nargs='+')
+parser.add_argument("--idnames", "--idnames", default = ["device_id"] , help="IDのキー名", nargs='+')
+parser.add_argument("--unitime", "--unitime", default=1, help="秒ごとにファイルへ記録をするか指定します(default = 1(sec))", type=float)
 
 print(sys.argv)
 
 args = parser.parse_args()
+
+waypoints = args.waypoints
+unit_time = args.unitime
+
 
 if args.coordinate is not None:
     input_json = args.coordinate
@@ -77,25 +87,39 @@ if args.coordinate is not None:
 if args.apikey is not None:
     api_key = args.apikey
 
-waypoints = args.waypoints
 if waypoints < 2:
     waypoints = 2
 
-def create_sample(cars, start_time, sample_duration):
+if args.filldown and unit_time < 1.0:
+    args.filldown = False
+
+# -0.5 ~ 0.5のランダム加速度を生成
+# 確率 r で異常加速度生成
+def rand_acceleration(r):
+    probability = random.uniform(0, 1)
+    if probability < r:
+        return -0.5 - random.uniform(0,1)
+    else:
+        return random.uniform(0, 1) - 0.5
+
+
+def create_sample(cars, start_time, duration):
     sample_data = []
     for car in cars:
-        car_record = gen_rand(car, start_time, sample_duration)
+        car_record = gen_rand(car, start_time, duration)
         sample_data.extend(car_record)
         print(str(len(sample_data)) + " data generated")
     return sample_data
 
-
-def gen_rand(car, start_time, sample_duration):
+def gen_rand(car, start_time, duration):
     v_id = car['v_id']
     drv_time = random.randint(0, 2400)
+
+    # ±args.random % の速度増減をさせる
     speed = car['speed'] * (1.0 + random.randint(-args.random, args.random) / 100.0)
     max_speed = speed * (1.0 + args.random / 100.0)
     min_speed = speed * (1.0 - args.random / 100.0)
+    
     brake_level = 0
     acceleration_level = 0
     brake_level = 0
@@ -105,26 +129,24 @@ def gen_rand(car, start_time, sample_duration):
     wheel_air_fr = random.uniform(air_min, air_max)
     wheel_air_rl = random.uniform(air_min, air_max)
     wheel_air_rr = random.uniform(air_min, air_max)
-    lat = car['coordinates'][0][0]
-    lng = car['coordinates'][0][1]
-    tgt_lat = car['coordinates'][1][0]
-    tgt_lng = car['coordinates'][1][1]
+    
+    lat = car['coordinates'][0][0] # start lat
+    lng = car['coordinates'][0][1] # start lng
+    tgt_lat = car['coordinates'][1][0]  # target lat
+    tgt_lng = car['coordinates'][1][1]  # target lng
 
     coordinates = iter(car['coordinates'][1:])
     tgt_coordinates = next(coordinates)
     last_record = {}
 
     rand_data = []
-    for i in range(0, sample_duration):
+    for i in range(0, duration):
         record = OrderedDict()
-        start_time = start_time + datetime.timedelta(0, 1)
-        #record['mobility_id'] = v_id
+        # unitimeごとにタイムスタンプを刻む
+        start_time = start_time + datetime.timedelta(0, unit_time)
+        
         for idname in args.idnames:
             record[idname] = v_id
-
-        # record[args.idname] = v_id
-        record['seq_no'] = i
-        # record['_id'] = v_id
 
         # speed random change
         speed_diff = random.uniform(-speed_change_max, speed_change_max)
@@ -146,24 +168,35 @@ def gen_rand(car, start_time, sample_duration):
             brake_level = (int)(-(speed_diff + speed_change_max / 3) / speed_change_max * acc_brk_max)
 
         # 変数
+        # 方位角(ラジアン)
         azimuth = math.atan2((tgt_lat - lat), (tgt_lng - lng)) * 180 / math.pi
-
+        if azimuth < 0:
+            azimuth += 360
+        # 現地点と次地点との距離
         distance = math.hypot(tgt_lng - lng, tgt_lat - lat)
 
-        speed_per_second = int(speed / 3.6)
+        # 1イテレーション(unit time)あたりに進む距離(m)
+        speed_per_iter = int(speed / 3.6 * unit_time)
 
-        lat_delta = math.sin(azimuth / 180.0 * math.pi) * lat_per_1m * speed_per_second
-        lng_delta = math.cos(azimuth / 180.0 * math.pi) * lng_per_1m * speed_per_second
+        # 1イテレーションあたりに進むlat,lng
+        lat_delta = math.sin(azimuth / 180.0 * math.pi) * lat_per_1m * speed_per_iter
+        lng_delta = math.cos(azimuth / 180.0 * math.pi) * lng_per_1m * speed_per_iter
 
         delta = math.hypot(lng_delta, lat_delta)
 
         # print(tgt_lat-lat,tgt_lng-lng)
-        record['lat'] = lat
-        record['lng'] = lng
-        record['alt'] = height
-        record['drv_time'] = drv_time
-        record['timestamp'] = start_time.strftime('%Y/%m/%d %H:%M:%S')
-        record['spd'] = int(speed)
+        record['date'] = start_time.strftime('%Y-%m-%dT%H:%M:%S.%f'+'+09:00')
+        # record['seq_no'] = i
+        record['latitude'] = lat
+        record['longitude'] = lng
+        record['speed'] = speed
+        record['direction'] = azimuth
+        record['emergency_cd'] = "0"
+        # record['acceleration_x'] = rand_acceleration(0.01)
+        # record['acceleration_y'] = rand_acceleration(0.01)
+        # record['acceleration_z'] = rand_acceleration(0.01)
+        # record['alt'] = height
+        # record['drv_time'] = drv_time
         # record['acc_lv'] = acceleration_level
         # record['brk_lv'] = brake_level
         # record['steering'] = steering
@@ -192,7 +225,7 @@ def gen_rand(car, start_time, sample_duration):
         else:
             lat = tgt_lat
             lng = tgt_lng
-            try:
+            try: # 次の巡回地点へ
                 tgt_coordinates = next(coordinates)
                 tgt_lat = tgt_coordinates[0]
                 tgt_lng = tgt_coordinates[1]
@@ -232,6 +265,7 @@ class MyPrettyPrinter(pprint.PrettyPrinter):
         return pprint.PrettyPrinter.format(self, object, context, maxlevels, level)
 
 
+# 巡回経路の緯度経度の作成
 def create_sample_path(car_id, speed, start, end):
     # https://github.com/googlemaps/google-maps-services-python/blob/master/googlemaps/directions.py
 
@@ -266,7 +300,7 @@ def create_sample_path(car_id, speed, start, end):
     car["coordinates"] = coordinates
     return car
 
-
+# 巡回路の作成
 def routes():
     locations = args.locations
     print("Location list(len:%d):" % (len(locations)))
@@ -274,6 +308,7 @@ def routes():
 
     routes = []
     # no random mode
+    # 入力順に回る
     if args.nonrandom:
         route = []
         for loc in locations:
@@ -282,9 +317,11 @@ def routes():
         return routes
 
     # random mode
+    # スタート，経由地，目的地をランダムに生成
     for i in range(args.routes):
         start_index = random.randint(0, len(locations) - 1)
         route = [locations[start_index]]
+        # routeからランダムにwaypoints個の経由地を選択
         for num in range(args.waypoints):
             while True:
                 end_index = random.randint(0, len(locations) - 1)
@@ -308,7 +345,9 @@ def execute():
         cars = []
         car_id = 0
         for i, locations in enumerate(rts):
+            # locations :=巡回路
             car_id = args.title + ('%06d' % (i + args.idoffset))
+            # car:=start->endまでの緯度経度を保有
             car = []
             print("processing:", len(rts) - i)
             for j, location in enumerate(locations):
@@ -330,25 +369,26 @@ def execute():
             json.dump(cars, file, indent=4)
 
     # input jsonの読込み
-    start_time = datetime.datetime.strptime(args.timestamp, "%Y/%m/%d %H:%M:%S")
+    start_time = datetime.datetime.strptime(
+        args.timestamp, "%Y/%m/%d %H:%M:%S.%f")
     with open(input_json, "r") as file:
         cars = json.load(file)
 
-    sample_json = create_sample(cars, start_time, args.duration)
+    sample_json = create_sample(cars, start_time, (int)(args.duration/unit_time))
 
+    # ファイル出力
     if args.out.endswith(".json"):
         with open(args.out, "w") as file:
             json.dump(sample_json, file, indent=4)
+    
     elif args.out.endswith(".yml") or args.out.endswith(".yaml"):
         import yaml
-
         output_data = []
         for x in sample_json:
             row = {}
             for y in x.keys():
                 row[y] = x[y]
             output_data.append(row)
-
         with open(args.out, "w") as file:
             file.write(yaml.dump(output_data, default_flow_style=False))
 
