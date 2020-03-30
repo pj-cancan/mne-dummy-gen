@@ -20,7 +20,6 @@ lat_per_1m = 0.000009
 lng_per_1m = 0.000011
 
 
-input_json = "coordinates.json"
 
 # 車両系定数 #########################
 curvature = 0
@@ -65,10 +64,9 @@ parser.add_argument("-p", "--timestamp", default="2020/01/01 00:00:00.000",
                     help="start time(default = 2020/01/01 00:00:00.000)")
 parser.add_argument("-e", "--loop", default=False,
                     help="loop among waypoints(default = False)", type=strtobool)
-parser.add_argument("-c", "--coordinate", help="use coordinate file to make result", type=str)
 parser.add_argument("-n", "--routerandom", default=True, help="if True, make route with all locations(default = False)",
                     type=strtobool)
-parser.add_argument("-k", "--apikey", default=False, help="google apiのキーを指定して下さい", type=str)
+parser.add_argument("-k", "--apikey", default=False, help="Google Duration APIのキーを指定して下さい", type=str)
 parser.add_argument("--idnum", "--idnum", default=0, help="IDの開始番号(default = 0)", type=int)
 parser.add_argument("--idnames", "--idnames", default = ["device_id"] , help="IDのキー名", nargs='+')
 parser.add_argument("--unitime", "--unitime", default=1,
@@ -81,15 +79,11 @@ waypoints = args.waypoints
 unit_time = args.unitime
 
 
-if args.coordinate is not None:
-    input_json = args.coordinate
-
 if args.apikey is not None:
     api_key = args.apikey
 
 if waypoints < 2:
     waypoints = 2
-
 
 
 
@@ -314,42 +308,35 @@ def routes():
 
 def main():
     global args
-    if args.coordinate is None:
-        rts = routes()
-        print("Routes list(%d * %d waypoints):" % (len(rts), waypoints))
-        # print(str(rts).decode("unicode_escape"))
 
-        cars = []
-        car_id = 0
-        for i, locations in enumerate(rts):
-            # locations :=巡回路
-            car_id = args.idtitle + ('%06d' % (i + args.idnum))
-            # car:=start->endまでの緯度経度を保有
-            car = []
-            print("processing:", len(rts) - i)
-            for j, location in enumerate(locations):
-                if j == len(locations) - 1:
-                    break
-                temp_car = create_sample_path(car_id, args.speed, locations[j], locations[j + 1])
-                if temp_car is None:
-                    continue
-                if len(car) == 0:
-                    car = temp_car
-                else:
-                    car['coordinates'] = car['coordinates'][:-1]
-                    car['coordinates'].extend(temp_car['coordinates'][1:])
-            if car is not None:
-                cars.append(car)
+    rts = routes()
+    print("Routes list(%d * %d waypoints):" % (len(rts), waypoints))
+    # print(str(rts).decode("unicode_escape"))
 
-        # input jsonの書き出し
-        with open(input_json, "w") as file:
-            json.dump(cars, file, indent=4)
+    cars = []
+    car_id = 0
+    for i, locations in enumerate(rts):
+        # locations :=巡回路
+        car_id = args.idtitle + ('%06d' % (i + args.idnum))
+        # car:=start->endまでの緯度経度を保有
+        car = []
+        print("processing:", len(rts) - i)
+        for j, location in enumerate(locations):
+            if j == len(locations) - 1:
+                break
+            temp_car = create_sample_path(car_id, args.speed, locations[j], locations[j + 1])
+            if temp_car is None:
+                continue
+            if len(car) == 0:
+                car = temp_car
+            else:
+                car['coordinates'] = car['coordinates'][:-1]
+                car['coordinates'].extend(temp_car['coordinates'][1:])
+        if car is not None:
+            cars.append(car)
 
-    # input jsonの読込み
-    start_time = datetime.datetime.strptime(
-        args.timestamp, "%Y/%m/%d %H:%M:%S.%f")
-    with open(input_json, "r") as file:
-        cars = json.load(file)
+
+    start_time = datetime.datetime.strptime(args.timestamp, "%Y/%m/%d %H:%M:%S.%f")
 
     sample_json = create_sample(cars, start_time, (int)(args.duration/unit_time))
 

@@ -1,10 +1,4 @@
-# 目次
-
-* 変更点
-* How to use
-* 変数系定義
-
-# 概要
+# Abstruct
 車両情報ダミーデータ生成ツール
 
 [Google map Direction API](https://developers.google.com/maps/documentation/directions/start) を使用してダミーの走行車両情報JSONファイルを時系列で生成します
@@ -24,27 +18,6 @@
     }
 ]
 ```
-
-## 変更点(2020/03/13)
-* 任意オプション --unitimeを追加
-  * タイムスタンプ刻みを指定できるようにしました．小数点以下まで指定できます． 
-* 車両名，IDを指定できるようにした
-* ソースにコメント追加
-
-## 変更点(2018/05/17)
-
-* python3に対応
-* 必須オプション --apikeyを追加 
-  * google-apiを呼び出すためのAPIキーを渡す
-* 任意オプション --inervalを追加
-  * データの生成単位を任意の秒単位に変更できるようになります
-  * duration 60でinterval 10なら 6レコードが生成されます
-* 任意オプション --filldownを追加
-  * --intervalが１より大きい時が対象となります
-  * この値がTrueの時は、生成されたデータは、次のデータ生成タイミングまで保持されます
-  * ただし、"drv_time"と"timestamp"は更新されます
-  * duration 60でinterval 10でfilldown True なら 60レコードが生成され、
-  * 10レコード毎に同じデータが設定されます
 
 
 # Usage
@@ -79,14 +52,14 @@ python  dummy-gen.py --duration 100 --apikey xxxxxxxxxxxxxxxxxxxxxx --location "
 python dummy-gen.py -h
 ['dummy-gen.py', '-h']
 usage: dummy-gen.py [-h] [-d DURATION] [-o OUT] [-l LOCATIONS [LOCATIONS ...]]
-                    [-r ROUTES] [-w WAYPOINTS] [-s SPEED] [-m SPEEDspeedRANDOM]
-                    [-t IDTITLE] [-p TIMESTAMP] [-e LOOP] [-c COORDidINATE]
-                    [-n ROUTEspeedRANDOM] [-k APIKEY] [--idnum IDNUM]
-                    [--idnameids IDNAMES [IDNAMES ...]] [--unitime UNITIME]
+                    [-r ROUTES] [-w WAYPOINTS] [-s SPEED] [-m SPEEDRANDOM]
+                    [-t IDTITLE] [-p TIMESTAMP] [-e LOOP] [-n ROUTERANDOM]
+                    [-k APIKEY] [--idnum IDNUM]
+                    [--idnames IDNAMES [IDNAMES ...]] [--unitime UNITIME]
 
 optional arguments:
   -h, --help            show this help message and exit
-
+  
   -d DURATION, --duration DURATION
                         sample duration(default = 600)
   
@@ -104,29 +77,25 @@ optional arguments:
   -s SPEED, --speed SPEED
                         speed(default = 36(km/h))
   
-  -m SPEEDspeedRANDOM, --speedspeedrandom SPEEDspeedRANDOM
-          id              speed idspeedrandom facorid(default = 0persenidt)
+  -m SPEEDRANDOM, --speedrandom SPEEDRANDOM
+                        speed random facor(default = 0persent)
   
   -t IDTITLE, --idtitle IDTITLE
-                        vehicleID = idtitle + sequential num(default = DUMMY)
+                        device_id = idtitle + sequential num(default = DUMMY)
   
   -p TIMESTAMP, --timestamp TIMESTAMP
                         start time(default = 2020/01/01 00:00:00.000)
   
   -e LOOP, --loop LOOP  loop among waypoints(default = False)
   
-  -c COORDINATE, --coordinate COORDINATE
-                        use coordinate file to make result
-  
-  -n ROUTEspeedRANDOM, --routespeedrandom ROUTEspeedRANDOM
-          id              if Truide, make route witidh all locations(default =
-                        False)
+  -n ROUTERANDOM, --routerandom ROUTERANDOM
+                        if True, make route with all locations(default = False)
   
   -k APIKEY, --apikey APIKEY
-                        google apiのキーを指定して下さい
+                        Google Duration APIのキーを指定して下さい
   
   --idnum IDNUM, --idnum IDNUM
-                        IDの開始番号を指定します(default = 0)
+                        IDの開始番号(default = 0)
   
   --idnames IDNAMES [IDNAMES ...], --idnames IDNAMES [IDNAMES ...]
                         IDのキー名
@@ -134,33 +103,27 @@ optional arguments:
   --unitime UNITIME, --unitime UNITIME
                         タイムスタンプ間隔を指定します(default = 1.0 sec)
 ```
-プログラム実行後に指定されたディレクトリにダミーデータが生成されます．
 
-同時に`coordinate.json`ファイルも生成されます．
-
-coordinate.jsonは Direction apiのレスポンスである目的地への経路情報を格納しています．
-
-実行引数でcoordinate.jsonを指定すれば，APIの利用をせずして同じ経路でのダミーデータを生成できます．
 
 ## Options
-| flag        | type   | description                                       | default                              |
-|-------------|--------|---------------------------------------------------|--------------------------------------|
-| apikey      | string | Google Map api の Duration api key                | -                                    |
-| duration    | int    | 走行時間（sec）                                    | 600                                  |
-| out         | string | 出力ファイル名　拡張子jsonまたはymlで指定してください | sample.json                          |
-| locations   | string | 出発地と目的地（複数）                              | ["大崎", "お台場", "品川", "羽田空港"] |
-| routes      | int    | 同時走行車数                                       | 1                                    |
-| waypoints   | int    | 目的地までに経由する場所の数                        | 2                                    |
-| speed       | float  | 走行速度（km/h）                                   | 36                                   |
-| speedrandom | int    | 速度変化のランダム割合(%)                           | 0                                    |
-| idtitle     | string | 車両IDタイトル                                     | DUMMY                                |
-| idnum       | int    | 車両ID番号                                         | 0000000                              |
-| timestamp   | time   | 走行開始時刻（YYYY/MM/DD HH/MM/SS.fff）            | 2020/01/01 0:00:00.000                |
-| loop        | bool   | 目的地に到着した後，スタート地点までの巡回をする      | FALSE                                |
-| cordinate   | string | コーディネートファイルを指定                        | -                                    |
-| routerandom | bool   | 入力locationをランダムに回る                        | True                               |
-| unitime     | float  | データ記録を行うタイムスタンプの間隔                 | 1                                    |
-| idnames     | string | 車両IDのKey名                                     | device_id                            |
+| flag        | type   | description                                                    | default                              |
+|-------------|--------|----------------------------------------------------------------|--------------------------------------|
+| apikey      | string | Google Map api の Duration api key                             | -                                    |
+| duration    | int    | 走行時間（sec）                                                 | 600                                  |
+| out         | string | 出力ファイル名　拡張子jsonまたはymlで指定してください              | sample.json                          |
+| locations   | string | 出発地と目的地（複数）                                           | ["大崎", "お台場", "品川", "羽田空港"] |
+| routes      | int    | 同時走行車数                                                    | 1                                    |
+| waypoints   | int    | 目的地までに経由する場所の数                                      | 2                                    |
+| speed       | float  | 走行速度（km/h）                                                | 36                                   |
+| speedrandom | int    | 速度変化のランダム割合(%)                                        | 0                                    |
+| idtitle     | string | 車両IDタイトル                                                  | DUMMY                                |
+| idnum       | int    | 車両ID番号                                                      | 0000000                              |
+| timestamp   | time   | 走行開始時刻（YYYY/MM/DD HH/MM/SS.fff）                          | 2020/01/01 0:00:00.000               |
+| loop        | bool   | 目的地に到着した時点で終了する　Trueの場合，出発地と目的地を往復する | False                                |
+| routerandom | bool   | 入力locationをランダムに回る                                     | True                                 |
+| unitime     | float  | データ記録を行うタイムスタンプの間隔(sec)                         | 1                                    |
+| idnames     | string | 車両IDのKey名                                                   | device_id                            |
+
 # Example
 
 ### データ生成例1
@@ -183,25 +146,8 @@ python dummy-gen.py \
 --timestamp "2017/08/16 09:00:00.000"
 ```
 
+
 ### データ生成例2
-- 1のデータを、coordinatesファイルから作成
-
-```
-python dummy-gen.py \
---duration 10800 \
---apikey xxxxxxx \
---location "刈谷市" "デンソー　本社" "東海市"  "大府市" "高浜市" "安城市" "豊明市" "岡崎市" "西尾市" "豊田市" \
---routes 400 \
---waypoints 2 \
---speed 36 \
---speedrandom 20 \
---idtitle DEMO \
---loop True \
---timestamp "2017/08/16 09:00:00.000" \
---coordinate coordinates.json
-```
-
-### データ生成例3
 
 - 品川から大崎へ向かう60秒間のデータを10秒毎に出力する． 
 - 出力件数は6件となる
@@ -214,7 +160,7 @@ python dummy-gen.py \
 ```
 
 
-### データ生成例4
+### データ生成例3
  
 - 東京駅周辺を走行する，10分間(600秒)のデータを生成
 - 時間は2020/01/01 00:00:00.000から0.1秒刻み
@@ -232,7 +178,7 @@ python dummy-gen.py \
 --idnames vehicleID
 ```
 
-### データ生成例5
+### データ生成4
  
 - 上記と同じデータ形式でデータ生成するが，目的地についてもdurationを経過するまで巡回をする  
   すなわち6000レコード生成する
@@ -248,36 +194,4 @@ python dummy-gen.py \
 --idnum 01234
 --idnames vehicleID
 --loop true
-```
-
-
-* jsonの中身を書き換える(dummy-replace)
-```
-python dummy-replace.py -h                                                                                                           (git) - [master]
-usage: dummy-replace.py [-h] [-i] [-o] [-t] [--duration]
-optional arguments:
-  -h, --help            show this help message and exit
-  -i INPUT, --input INPUT
-                        input filename(default = input.json)
-  -o OUT, --out OUT     output filename(default = out.json)
-  -t TITLE, --title TITLE
-                        title(default = A)
-  --duration DURATION   duration(default = 600)
-```
-
-* jsonのレコードを複製する
-```
-python dummy-replicate.py -h                                                                                                         (git) - [master]
-usage: dummy-replicate.py [-h] [-i INPUT] [-o OUT] [-t TITLE] [--date DATE] [--duration DURATION] [-r REPLICATE]
-optional arguments:
-  -h, --help            show this help message and exit
-  -i INPUT, --input INPUT
-                        input filename(default = input.json)
-  -o OUT, --out OUT     output filename(default = out.json)
-  -t TITLE, --title TITLE
-                        title(default = A)
-  --date DATE           date(default = 2017/08/02)
-  --duration DURATION   duration(default = 600)
-  -r REPLICATE, --replicate REPLICATE
-                        replicate(default = 1)
 ```
