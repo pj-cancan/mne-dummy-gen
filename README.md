@@ -42,7 +42,7 @@ pip install -r requirements.txt
 
 ```
 
-* プログラム実行
+## Run
 
 ```
 # 100秒間 大崎から品川への走行のダミーデータを作成します
@@ -81,7 +81,7 @@ optional arguments:
                         speed random facor(default = 0persent)
   
   -t IDTITLE, --idtitle IDTITLE
-                        device_id = idtitle + sequential num(default = DUMMY)
+                        device_id = idtitle + sequential num (default = DUMMY)
   
   -p TIMESTAMP, --timestamp TIMESTAMP
                         start time(default = 2020/01/01 00:00:00.000)
@@ -98,7 +98,7 @@ optional arguments:
                         IDの開始番号(default = 0)
   
   --idnames IDNAMES [IDNAMES ...], --idnames IDNAMES [IDNAMES ...]
-                        IDのキー名
+                        IDのキー名 スペース区切りで複数指定できます
   
   --unitime UNITIME, --unitime UNITIME
                         タイムスタンプ間隔を指定します(default = 1.0 sec)

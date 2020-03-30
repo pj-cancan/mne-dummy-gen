@@ -68,7 +68,7 @@ parser.add_argument("-n", "--routerandom", default=True, help="if True, make rou
                     type=strtobool)
 parser.add_argument("-k", "--apikey", default=False, help="Google Duration APIのキーを指定して下さい", type=str)
 parser.add_argument("--idnum", "--idnum", default=0, help="IDの開始番号(default = 0)", type=int)
-parser.add_argument("--idnames", "--idnames", default = ["device_id"] , help="IDのキー名", nargs='+')
+parser.add_argument("--idnames", "--idnames", default = ["device_id"] , help="IDのキー名 スペース区切りで複数指定できます", nargs='+')
 parser.add_argument("--unitime", "--unitime", default=1,
                     help="タイムスタンプ間隔を指定します(default = 1.0 sec)", type=float)
 
