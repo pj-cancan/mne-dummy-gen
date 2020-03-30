@@ -51,56 +51,44 @@ python  dummy-gen.py --duration 100 --apikey xxxxxxxxxxxxxxxxxxxxxx --location "
 # ヘルプを表示
 python dummy-gen.py -h
 ['dummy-gen.py', '-h']
-usage: dummy-gen.py [-h] [-d DURATION] [-o OUT] [-l LOCATIONS [LOCATIONS ...]]
-                    [-r ROUTES] [-w WAYPOINTS] [-s SPEED] [-m SPEEDRANDOM]
-                    [-t IDTITLE] [-p TIMESTAMP] [-e LOOP] [-n ROUTERANDOM]
-                    [-k APIKEY] [--idnum IDNUM]
-                    [--idnames IDNAMES [IDNAMES ...]] [--unitime UNITIME]
+usage: dummy-gen.py [-h] [-d DURATION] [-o OUT]
+                    [-lo LOCATIONS [LOCATIONS ...]] [-r ROUTES] [-w WAYPOINTS]
+                    [-s SPEED] [-sr SPEEDRANDOM] [--idtitle IDTITLE]
+                    [-t TIMESTAMP] [-lp LOOP] [-rr ROUTERANDOM] [-k APIKEY]
+                    [--idnum IDNUM] [--idnames IDNAMES [IDNAMES ...]]
+                    [-u UNITIME]
 
 optional arguments:
   -h, --help            show this help message and exit
-  
   -d DURATION, --duration DURATION
                         sample duration(default = 600)
-  
   -o OUT, --out OUT     output filename(default = sample.json)
-  
-  -l LOCATIONS [LOCATIONS ...], --locations LOCATIONS [LOCATIONS ...]
+  -lo LOCATIONS [LOCATIONS ...], --locations LOCATIONS [LOCATIONS ...]
                         locations (default = "大崎" "お台場" "品川" "羽田空港")
-  
   -r ROUTES, --routes ROUTES
                         route size(default = 1)
-  
   -w WAYPOINTS, --waypoints WAYPOINTS
                         waypoints(default = 2)
-  
   -s SPEED, --speed SPEED
                         speed(default = 36(km/h))
-  
-  -m SPEEDRANDOM, --speedrandom SPEEDRANDOM
+  -sr SPEEDRANDOM, --speedrandom SPEEDRANDOM
                         speed random facor(default = 0persent)
-  
-  -t IDTITLE, --idtitle IDTITLE
-                        device_id = idtitle + sequential num (default = DUMMY)
-  
-  -p TIMESTAMP, --timestamp TIMESTAMP
+  --idtitle IDTITLE, --idtitle IDTITLE
+                        device_id = idtitle + sequential num(default = DUMMY)
+  -t TIMESTAMP, --timestamp TIMESTAMP
                         start time(default = 2020/01/01 00:00:00.000)
-  
-  -e LOOP, --loop LOOP  loop among waypoints(default = False)
-  
-  -n ROUTERANDOM, --routerandom ROUTERANDOM
-                        if True, make route with all locations(default = False)
-  
+  -lp LOOP, --loop LOOP
+                        loop among waypoints(default = False)
+  -rr ROUTERANDOM, --routerandom ROUTERANDOM
+                        if True, make route with all locations(default =
+                        False)
   -k APIKEY, --apikey APIKEY
                         Google Duration APIのキーを指定して下さい
-  
   --idnum IDNUM, --idnum IDNUM
                         IDの開始番号(default = 0)
-  
   --idnames IDNAMES [IDNAMES ...], --idnames IDNAMES [IDNAMES ...]
                         IDのキー名 スペース区切りで複数指定できます
-  
-  --unitime UNITIME, --unitime UNITIME
+  -u UNITIME, --unitime UNITIME
                         タイムスタンプ間隔を指定します(default = 1.0 sec)
 ```
 
