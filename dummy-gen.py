@@ -77,13 +77,18 @@ print(sys.argv)
 args = parser.parse_args()
 waypoints = args.waypoints
 unit_time = args.unitime
+routerandom = args.routerandom
 
 
 if args.apikey is not None:
     api_key = args.apikey
 
+if not routerandom:
+    waypoints = len(args.locations)
+    
 if waypoints < 2:
     waypoints = 2
+
 
 
 
