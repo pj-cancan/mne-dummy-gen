@@ -3,6 +3,13 @@
 
 [Google map Direction API](https://developers.google.com/maps/documentation/directions/start) を使用してダミーの走行車両情報JSONファイルを時系列で生成します
 
+## 生成された走行データの可視化例
+* 5台の車が1時間，東京駅周辺を走行した想定のダミーデータ
+
+![sample-abstruct](https://user-images.githubusercontent.com/52477510/78115073-363cc200-743d-11ea-831d-fd24cce46a04.png)
+
+
+
 
 ## sample output
 
@@ -42,7 +49,7 @@ pip install -r requirements.txt
 
 ```
 
-* プログラム実行
+## Run
 
 ```
 # 100秒間 大崎から品川への走行のダミーデータを作成します
@@ -51,56 +58,44 @@ python  dummy-gen.py --duration 100 --apikey xxxxxxxxxxxxxxxxxxxxxx --location "
 # ヘルプを表示
 python dummy-gen.py -h
 ['dummy-gen.py', '-h']
-usage: dummy-gen.py [-h] [-d DURATION] [-o OUT] [-l LOCATIONS [LOCATIONS ...]]
-                    [-r ROUTES] [-w WAYPOINTS] [-s SPEED] [-m SPEEDRANDOM]
-                    [-t IDTITLE] [-p TIMESTAMP] [-e LOOP] [-n ROUTERANDOM]
-                    [-k APIKEY] [--idnum IDNUM]
-                    [--idnames IDNAMES [IDNAMES ...]] [--unitime UNITIME]
+usage: dummy-gen.py [-h] [-d DURATION] [-o OUT]
+                    [-lo LOCATIONS [LOCATIONS ...]] [-r ROUTES] [-w WAYPOINTS]
+                    [-s SPEED] [-sr SPEEDRANDOM] [--idtitle IDTITLE]
+                    [-t TIMESTAMP] [-lp LOOP] [-rr ROUTERANDOM] [-k APIKEY]
+                    [--idnum IDNUM] [--idnames IDNAMES [IDNAMES ...]]
+                    [-u UNITIME]
 
 optional arguments:
   -h, --help            show this help message and exit
-  
   -d DURATION, --duration DURATION
                         sample duration(default = 600)
-  
   -o OUT, --out OUT     output filename(default = sample.json)
-  
-  -l LOCATIONS [LOCATIONS ...], --locations LOCATIONS [LOCATIONS ...]
+  -lo LOCATIONS [LOCATIONS ...], --locations LOCATIONS [LOCATIONS ...]
                         locations (default = "大崎" "お台場" "品川" "羽田空港")
-  
   -r ROUTES, --routes ROUTES
                         route size(default = 1)
-  
   -w WAYPOINTS, --waypoints WAYPOINTS
                         waypoints(default = 2)
-  
   -s SPEED, --speed SPEED
                         speed(default = 36(km/h))
-  
-  -m SPEEDRANDOM, --speedrandom SPEEDRANDOM
+  -sr SPEEDRANDOM, --speedrandom SPEEDRANDOM
                         speed random facor(default = 0persent)
-  
-  -t IDTITLE, --idtitle IDTITLE
+  --idtitle IDTITLE, --idtitle IDTITLE
                         device_id = idtitle + sequential num(default = DUMMY)
-  
-  -p TIMESTAMP, --timestamp TIMESTAMP
+  -t TIMESTAMP, --timestamp TIMESTAMP
                         start time(default = 2020/01/01 00:00:00.000)
-  
-  -e LOOP, --loop LOOP  loop among waypoints(default = False)
-  
-  -n ROUTERANDOM, --routerandom ROUTERANDOM
-                        if True, make route with all locations(default = False)
-  
+  -lp LOOP, --loop LOOP
+                        loop among waypoints(default = False)
+  -rr ROUTERANDOM, --routerandom ROUTERANDOM
+                        if True, make route with all locations(default =
+                        False)
   -k APIKEY, --apikey APIKEY
                         Google Duration APIのキーを指定して下さい
-  
   --idnum IDNUM, --idnum IDNUM
                         IDの開始番号(default = 0)
-  
   --idnames IDNAMES [IDNAMES ...], --idnames IDNAMES [IDNAMES ...]
-                        IDのキー名
-  
-  --unitime UNITIME, --unitime UNITIME
+                        IDのキー名 スペース区切りで複数指定できます
+  -u UNITIME, --unitime UNITIME
                         タイムスタンプ間隔を指定します(default = 1.0 sec)
 ```
 
@@ -126,18 +121,19 @@ optional arguments:
 
 # Example
 
-### データ生成例1
+## データ生成例1
  
-- 刈谷市周辺を走行する，3時間(10800秒)のデータを400件生成
+- 東京周辺を走行する，1時間(3600秒)のデータを5件生成
 - 平均速度は36km/h, 速度のランダムさは20%, 車両IDは"DEMO000000", 時間は2017/08/16 09:00:00から1秒刻み
 - `location`からランダムに3点を選択し，それらの都市間を回り続ける．
 
 ```
 python dummy-gen.py \
---duration 10800 \
+--duration 3600 \
 --apikey xxxxxxx \
---location "刈谷市" "デンソー　本社" "東海市"  "大府市" "高浜市" "安城市" "豊明市" "岡崎市" "西尾市" "豊田市" \
---routes 400 \
+--location "東京駅" "汐留" "有楽町" "新橋" "銀座" "日比谷" \
+--routes 5 \
+--unitime 1 \
 --waypoints 2 \
 --speed 36 \
 --speedrandom 20 \
@@ -146,8 +142,21 @@ python dummy-gen.py \
 --timestamp "2017/08/16 09:00:00.000"
 ```
 
+### Output
+```
+{
+        "device_id": "DEMO000000",
+        "date": "2017-08-16T09:00:01.000000+09:00",
+        "seq_no": 0,
+        "latitude": 34.9551073,
+        "longitude": 137.1731918,
+        "speed": 39.966776630358495
+}
+```
+![sample1-3](https://user-images.githubusercontent.com/52477510/78115073-363cc200-743d-11ea-831d-fd24cce46a04.png)
 
-### データ生成例2
+
+## データ生成例2
 
 - 品川から大崎へ向かう60秒間のデータを10秒毎に出力する． 
 - 出力件数は6件となる
@@ -159,11 +168,55 @@ python dummy-gen.py \
 --unitime 10
 ```
 
+### Output
+```
+{
+        "device_id": "DUMMY000000",
+        "date": "2020-01-01T00:00:10.000000+09:00",
+        "seq_no": 0,
+        "latitude": 35.6203897,
+        "longitude": 139.7255799,
+        "speed": 36.0
+}
+```
 
-### データ生成例3
+![sample2](https://user-images.githubusercontent.com/52477510/78115240-78fe9a00-743d-11ea-8aae-d286d7a1e903.png)
+
+
+## データ生成例3
+ 
+- 東京駅周辺を走行する，100分間(6000秒)のデータを生成
+- 時間は2020/01/01 00:00:00.000から 1分刻み
+- 入力 location を順番に向かって走行する．
+
+```
+python dummy-gen.py \
+--duration 6000 \
+--apikey xxxxxxx \
+--location "東京駅" "汐留" "有楽町" "新橋" "銀座" "日比谷" \
+--unitime 60 \
+--timestamp "2020/01/01 00:00:00.000" \
+--routerandom false
+```
+### Output
+```
+{
+        "vehicleID": "DEMO001234",
+        "date": "2020-01-01T00:10:00.000000+09:00",
+        "seq_no": 0,
+        "latitude": 35.6773514,
+        "longitude": 139.7655863,
+        "speed": 36.0
+}
+```
+![sample3](https://user-images.githubusercontent.com/52477510/78115319-97649580-743d-11ea-82c1-924bef4b3caf.png)
+
+
+## データ生成例4
  
 - 東京駅周辺を走行する，10分間(600秒)のデータを生成
 - 時間は2020/01/01 00:00:00.000から0.1秒刻み
+- 入力 location からランダムに3点選んで走行
 - device_idのKey名を`vehicleID`としてID名を`DEMO001234`にする
 
 ```
@@ -174,13 +227,26 @@ python dummy-gen.py \
 --unitime 0.1 \
 --timestamp "2020/01/01 00:00:00.000" \
 --idtitle DEMO \
---idnum 01234
+--idnum 1234
 --idnames vehicleID
 ```
+### Output
+```
+{
+        "vehicleID": "DEMO001234",
+        "date": "2020-01-01T00:00:00.100000+09:00",
+        "seq_no": 0,
+        "latitude": 35.6773514,
+        "longitude": 139.7655863,
+        "speed": 36.0
+}
+```
+![sample4](https://user-images.githubusercontent.com/52477510/78115441-c7ac3400-743d-11ea-96f8-f30a90f65ac6.png)
 
-### データ生成4
+
+## データ生成例5
  
-- 上記と同じデータ形式でデータ生成するが，目的地についてもdurationを経過するまで巡回をする  
+- 生成例4 と同じ形式でデータ生成するが，目的地に到着してもdurationを経過するまで出発地と目的地を巡回する  
   すなわち6000レコード生成する
 
 ```
@@ -191,7 +257,49 @@ python dummy-gen.py \
 --unitime 0.1 \
 --timestamp "2020/01/01 00:00:00.000" \
 --idtitle DEMO \
---idnum 01234
+--idnum 1234
 --idnames vehicleID
 --loop true
+```
+
+### Output
+```
+{
+        "vehicleID": "DEMO001234",
+        "date": "2020-01-01T00:00:00.100000+09:00",
+        "seq_no": 0,
+        "latitude": 35.6773514,
+        "longitude": 139.7655863,
+        "speed": 36.0
+}
+```
+![sample5](https://user-images.githubusercontent.com/52477510/78115544-eca0a700-743d-11ea-8a16-c67d9764e2f4.png)
+
+
+## データ生成例6
+ 
+- 生成例4 と同じ形式でデータ生成  
+  車両名のキーを`vehicle_key1`，`vehicle_key2`の 2つ持たせる
+
+```
+python dummy-gen.py \
+--duration 600 \
+--apikey xxxxxxx \
+--location "東京駅" "汐留" "有楽町" "新橋" "銀座" "日比谷" \
+--unitime 1.0 \
+--timestamp "2020/01/01 00:00:00.000" \
+--idnames vehicle_id1 vehicle_id2  
+```
+
+### Output
+```
+{
+        "vehicle_id1": "DUMMY000000",
+        "vehicle_id2": "DUMMY000000",
+        "date": "2020-01-01T00:00:01.000000+09:00",
+        "seq_no": 0,
+        "latitude": 35.6648142,
+        "longitude": 139.7563172,
+        "speed": 36.0
+}
 ```

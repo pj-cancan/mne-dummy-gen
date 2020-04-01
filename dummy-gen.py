@@ -53,37 +53,37 @@ air_max = 2.4
 parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--duration", default=600, help="sample duration(default = 600)", type=int)
 parser.add_argument("-o", "--out", default="sample.json", help="output filename(default = sample.json)", type=str)
-parser.add_argument("-l", '--locations', default=["大崎", "お台場", "品川", "羽田空港"],
-                    help="locations (default = \"大崎\" \"お台場\" \"品川\" \"羽田空港\")", nargs='+')
+parser.add_argument("-lo", '--locations', default=["大崎", "お台場", "品川", "羽田空港"], help="locations (default = \"大崎\" \"お台場\" \"品川\" \"羽田空港\")", nargs='+')
 parser.add_argument("-r", "--routes", default=1, help="route size(default = 1)", type=int)
 parser.add_argument("-w", "--waypoints", default=2, help="waypoints(default = 2)", type=int)
 parser.add_argument("-s", "--speed", default=36, help="speed(default = 36(km/h))", type=float)
-parser.add_argument("-m", "--speedrandom", default=0, help="speed random facor(default = 0persent)", type=int)
-parser.add_argument("-t", "--idtitle", default="DUMMY", help="device_id = idtitle + sequential num(default = DUMMY)", type=str)
-parser.add_argument("-p", "--timestamp", default="2020/01/01 00:00:00.000",
-                    help="start time(default = 2020/01/01 00:00:00.000)")
-parser.add_argument("-e", "--loop", default=False,
-                    help="loop among waypoints(default = False)", type=strtobool)
-parser.add_argument("-n", "--routerandom", default=True, help="if True, make route with all locations(default = False)",
-                    type=strtobool)
+parser.add_argument("-sr", "--speedrandom", default=0, help="speed random facor(default = 0persent)", type=int)
+parser.add_argument("--idtitle", "--idtitle", default="DUMMY", help="device_id = idtitle + sequential num(default = DUMMY)", type=str)
+parser.add_argument("-t", "--timestamp", default="2020/01/01 00:00:00.000", help="start time(default = 2020/01/01 00:00:00.000)")
+parser.add_argument("-lp", "--loop", default=False, help="loop among waypoints(default = False)", type=strtobool)
+parser.add_argument("-rr", "--routerandom", default=True, help="if True, make route with all locations(default = False)", type=strtobool)
 parser.add_argument("-k", "--apikey", default=False, help="Google Duration APIのキーを指定して下さい", type=str)
 parser.add_argument("--idnum", "--idnum", default=0, help="IDの開始番号(default = 0)", type=int)
-parser.add_argument("--idnames", "--idnames", default = ["device_id"] , help="IDのキー名", nargs='+')
-parser.add_argument("--unitime", "--unitime", default=1,
-                    help="タイムスタンプ間隔を指定します(default = 1.0 sec)", type=float)
+parser.add_argument("--idnames", "--idnames", default = ["device_id"] , help="IDのキー名 スペース区切りで複数指定できます", nargs='+')
+parser.add_argument("-u", "--unitime", default=1, help="タイムスタンプ間隔を指定します(default = 1.0 sec)", type=float)
 
 print(sys.argv)
 
 args = parser.parse_args()
 waypoints = args.waypoints
 unit_time = args.unitime
+routerandom = args.routerandom
 
 
 if args.apikey is not None:
     api_key = args.apikey
 
+if not routerandom:
+    waypoints = len(args.locations)
+    
 if waypoints < 2:
     waypoints = 2
+
 
 
 
