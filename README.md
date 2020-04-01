@@ -3,6 +3,13 @@
 
 [Google map Direction API](https://developers.google.com/maps/documentation/directions/start) を使用してダミーの走行車両情報JSONファイルを時系列で生成します
 
+## 生成された走行データの可視化例
+* 5台の車が1時間，東京駅周辺を走行した想定のダミーデータ
+
+![sample-abstruct](https://user-images.githubusercontent.com/52477510/78115073-363cc200-743d-11ea-831d-fd24cce46a04.png)
+
+
+
 
 ## sample output
 
@@ -146,6 +153,7 @@ python dummy-gen.py \
         "speed": 39.966776630358495
 }
 ```
+![sample1-3](https://user-images.githubusercontent.com/52477510/78115073-363cc200-743d-11ea-831d-fd24cce46a04.png)
 
 
 ## データ生成例2
@@ -171,6 +179,9 @@ python dummy-gen.py \
         "speed": 36.0
 }
 ```
+
+![sample2](https://user-images.githubusercontent.com/52477510/78115240-78fe9a00-743d-11ea-8aae-d286d7a1e903.png)
+
 
 ## データ生成例3
  
@@ -198,6 +209,8 @@ python dummy-gen.py \
         "speed": 36.0
 }
 ```
+![sample3](https://user-images.githubusercontent.com/52477510/78115319-97649580-743d-11ea-82c1-924bef4b3caf.png)
+
 
 ## データ生成例4
  
@@ -228,6 +241,8 @@ python dummy-gen.py \
         "speed": 36.0
 }
 ```
+![sample4](https://user-images.githubusercontent.com/52477510/78115441-c7ac3400-743d-11ea-96f8-f30a90f65ac6.png)
+
 
 ## データ生成例5
  
@@ -258,6 +273,8 @@ python dummy-gen.py \
         "speed": 36.0
 }
 ```
+![sample5](https://user-images.githubusercontent.com/52477510/78115544-eca0a700-743d-11ea-8a16-c67d9764e2f4.png)
+
 
 ## データ生成例6
  
