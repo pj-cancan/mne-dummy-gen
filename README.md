@@ -1,4 +1,4 @@
-# Abstruct
+# Abstract
 車両情報ダミーデータ生成ツール
 
 [Google map Direction API](https://developers.google.com/maps/documentation/directions/start) を使用してダミーの走行車両情報JSONファイルを時系列で生成します
